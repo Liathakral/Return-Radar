@@ -1,4 +1,10 @@
+from pathlib import Path
+
+from dotenv import load_dotenv
+load_dotenv()
+
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
 from radar.classify import classify
@@ -14,6 +20,11 @@ client = get_client()  # None when OPENAI_API_KEY is not set
 class AnalyzeIn(BaseModel):
     comments: list[str] = Field(min_length=1, max_length=500)
     top_k: int = Field(3, ge=1, le=len(THEMES))
+
+
+@app.get("/")
+def home():
+    return FileResponse(Path(__file__).parent / "static" / "index.html")
 
 
 @app.get("/health")
