@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Return Radar</title>
+  <style>
+    :root { color-scheme: light; --ink:#17211d; --muted:#68756e; --line:#e2e8e3; --paper:#f6f8f5; --green:#176b4b; --green2:#e8f3ed; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--paper); color:var(--ink); font:15px/1.5 Inter, ui-sans-serif, system-ui, -apple-system, sans-serif; }
+    .wrap { width:min(960px, calc(100% - 36px)); margin:0 auto; padding:48px 0 72px; }
+    header { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:54px; }
+    .brand { display:flex; align-items:center; gap:11px; font-weight:750; letter-spacing:-.03em; font-size:19px; }
+    .mark { width:34px; height:34px; display:grid; place-items:center; border-radius:10px; background:var(--green); color:white; font-weight:800; }
+    .tag { color:var(--muted); font-size:12px; border:1px solid var(--line); padding:6px 10px; border-radius:999px; }
+    .eyebrow { color:var(--green); font-size:12px; font-weight:750; text-transform:uppercase; letter-spacing:.13em; }
+    h1 { font-size:clamp(36px, 6vw, 58px); line-height:1.03; letter-spacing:-.055em; max-width:720px; margin:12px 0 16px; }
+    .intro { max-width:610px; color:var(--muted); font-size:17px; margin:0 0 30px; }
+    .panel { background:white; border:1px solid var(--line); border-radius:18px; padding:24px; box-shadow:0 12px 35px #1b38200a; }
+    label { display:block; font-size:13px; font-weight:700; margin-bottom:9px; }
+    textarea { display:block; width:100%; min-height:210px; resize:vertical; border:1px solid #d8e1da; border-radius:12px; padding:15px; font:14px/1.65 ui-monospace, SFMono-Regular, Menlo, monospace; color:var(--ink); outline:none; }
+    textarea:focus, select:focus { border-color:var(--green); box-shadow:0 0 0 3px #176b4b18; }
+    .hint { color:var(--muted); font-size:12px; margin:8px 0 20px; }
+    .controls { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+    .select-wrap { display:flex; align-items:center; gap:10px; }
+    select { border:1px solid var(--line); border-radius:9px; background:white; padding:9px 12px; color:var(--ink); }
+    button { border:0; border-radius:10px; background:var(--green); color:white; font-weight:700; padding:12px 20px; cursor:pointer; }
+    button:disabled { opacity:.6; cursor:wait; }
+    .status { min-height:24px; margin-top:15px; font-size:13px; color:var(--muted); }
+    .status.error { color:#b42318; }
+    #results { margin-top:34px; }
+    .result-head { display:flex; align-items:end; justify-content:space-between; gap:12px; margin-bottom:16px; }
+    h2 { font-size:24px; letter-spacing:-.035em; margin:0; }
+    .summary { color:var(--muted); font-size:13px; }
+    .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:13px; }
+    .card { background:white; border:1px solid var(--line); border-radius:14px; padding:18px; }
+    .card-top { display:flex; justify-content:space-between; gap:10px; align-items:start; }
+    .card h3 { margin:0; font-size:16px; }
+    .count { background:var(--green2); color:var(--green); border-radius:8px; padding:4px 8px; font-size:12px; font-weight:750; white-space:nowrap; }
+    .fix { color:var(--muted); font-size:13px; margin:13px 0; }
+    .examples { padding-left:18px; margin:0; font-size:12px; color:#435149; }
+    .examples li { margin:5px 0; }
+    .emerging { margin-top:18px; background:#fff; border:1px solid var(--line); border-radius:14px; padding:18px; }
+    .emerging h3 { margin:0 0 8px; font-size:15px; }
+    .emerging p { color:var(--muted); margin:0; font-size:13px; }
+    .empty { background:white; border:1px dashed #cbd7ce; border-radius:14px; padding:22px; color:var(--muted); }
+    footer { margin-top:45px; color:#87928b; font-size:12px; }
+    @media(max-width:600px) { .wrap{padding-top:25px} header{margin-bottom:38px} .panel{padding:17px} .controls{align-items:stretch} .controls button{width:100%} }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <div class="brand"><span class="mark">R</span> Return Radar</div>
+      <span class="tag">AI-powered return insights</span>
+    </header>
+
+    <div class="eyebrow">Turn customer feedback into action</div>
+    <h1>Find the product issues hiding in your returns.</h1>
+    <p class="intro">Paste customer return comments. Return Radar groups recurring problems, ranks the biggest themes, and suggests what to fix first.</p>
+
+    <section class="panel">
+      <label for="comments">Customer return comments</label>
+      <textarea id="comments" placeholder="The straps are too short&#10;The zipper broke after two weeks&#10;Runs smaller than expected&#10;The app keeps crashing"></textarea>
+      <p class="hint">Enter one comment per line. Add at least one comment (up to 500).</p>
+      <div class="controls">
+        <div class="select-wrap">
+          <label for="topK" style="margin:0">Top issues</label>
+          <select id="topK"><option value="3">3</option><option value="5">5</option><option value="8">8</option></select>
+        </div>
+        <button id="analyzeBtn" type="button">Analyze comments →</button>
+      </div>
+      <div id="status" class="status" role="status" aria-live="polite"></div>
+    </section>
+
+    <section id="results" hidden>
+      <div class="result-head">
+        <h2>What customers are telling you</h2>
+        <span id="summary" class="summary"></span>
+      </div>
+      <div id="cards" class="cards"></div>
+      <div id="emerging"></div>
+    </section>
+    <footer>Return Radar · Prototype for exploring customer return feedback. AI-generated classifications should be reviewed before making business decisions.</footer>
+  </main>
+  <script>
+    const button = document.getElementById("analyzeBtn");
+    const statusEl = document.getElementById("status");
+    const results = document.getElementById("results");
+    const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
+
+    button.addEventListener("click", async () => {
+      const comments = document.getElementById("comments").value.split("\n").map(s => s.trim()).filter(Boolean);
+      if (!comments.length) {
+        statusEl.textContent = "Please enter at least one customer comment.";
+        statusEl.className = "status error";
+        return;
+      }
+      if (comments.length > 500) {
+        statusEl.textContent = "Please keep your input to 500 comments or fewer.";
+        statusEl.className = "status error";
+        return;
+      }
+      button.disabled = true;
+      button.textContent = "Analyzing…";
+      statusEl.className = "status";
+      statusEl.textContent = "Analyzing feedback. This may take a little while…";
+      results.hidden = true;
+
+      try {
+        const response = await fetch("/analyze", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ comments, top_k: Number(document.getElementById("topK").value) })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.detail || "Analysis failed. Please try again.");
+        document.getElementById("summary").textContent = data.total + " comments · " + data.failed + " failed";
+        const cards = document.getElementById("cards");
+        cards.innerHTML = "";
+        if (!data.top?.length) cards.innerHTML = '<div class="empty">No recurring themes were found in these comments.</div>';
+        for (const item of (data.top || [])) {
+          const examples = (item.examples || []).map(x => "<li>" + escapeHtml(x) + "</li>").join("");
+          cards.insertAdjacentHTML("beforeend",
+            '<article class="card"><div class="card-top"><h3>' + escapeHtml(item.theme) + '</h3><span class="count">' + escapeHtml(item.count) + ' mentions</span></div><p class="fix">' + escapeHtml(item.fix) + '</p>' +
+            (examples ? '<ul class="examples">' + examples + '</ul>' : '') + '</article>');
+        }
+        const emerging = document.getElementById("emerging");
+        const groups = data.emerging || [];
+        emerging.innerHTML = groups.length
+          ? '<div class="emerging"><h3>Emerging issues</h3><p>' + groups.map(g => escapeHtml(typeof g === "string" ? g : JSON.stringify(g))).join(" · ") + '</p></div>'
+          : "";
+        results.hidden = false;
+        statusEl.textContent = "Analysis complete.";
+      } catch (error) {
+        statusEl.textContent = error.message;
+        statusEl.className = "status error";
+      } finally {
+        button.disabled = false;
+        button.textContent = "Analyze comments →";
+      }
+    });
+  </script>
+</body>
+</html>
