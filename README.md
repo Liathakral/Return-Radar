@@ -39,21 +39,3 @@ curl -s localhost:8000/analyze -H 'content-type: application/json' -d '{
 }'
 ```
 
-## What is and is not verified
-
-- Verified by the tests: batching, schema validation, merging, failure reporting, heap ranking, clustering of unmatched comments, and the HTTP endpoint, all against a fake client.
-- Not verified: accuracy against the real OpenAI API. The tests prove the plumbing, not the model's labels. Measure that before quoting any number (see below).
-
-## Measure it (do this before putting numbers on a resume)
-
-1. Hand-label 50 to 100 comments with the correct causes.
-2. Run them through `classify()` and compute precision and recall per cause.
-3. Change the prompt or the cause descriptions, rerun, and record the before and after.
-
-Those are real numbers you can defend in an interview.
-
-## Next steps
-
-- Compare embedding-nearest-cause classification against the LLM on cost and accuracy.
-- Cache labels by comment hash so repeat runs are free.
-- Run batches in parallel with a rate limit and retries.
